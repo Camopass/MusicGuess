@@ -1,15 +1,17 @@
 import sys
-from networking import Player, Host, TEST_HOST, TEST_PORT
+from networking import Client, Host
+from debug.networking import TEST_HOST, TEST_PORT
 
 def client():
-    p = Player()
-    p.join(TEST_HOST, TEST_PORT)
+    p = Client()
+    HOST, PORT = p.prompt()
+    p.join(HOST, PORT)
     while True:
         print(f"Got Back: {p.send_and_recieve_test()!r}")
 
 def host():
     print("Launching as host...")
-    h = Host()
+    h = Host(TEST_HOST, TEST_PORT)
     h.listen()
     while True:
         h.manage_player_connections()

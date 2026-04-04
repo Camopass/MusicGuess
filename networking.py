@@ -1,15 +1,12 @@
 import socket
 import selectors
 import types
-import pygame
-
-TEST_HOST, TEST_PORT = '127.0.0.1', 6967
 
 class User:
 
     def __init__(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.selector = selectors.DefaultSelector()
+        self.socket = socket.socket(socket.AF_INET, 
+                                    socket.SOCK_STREAM)
     
     def __del__(self):
         self.socket.close()
@@ -18,11 +15,12 @@ class Host(User):
     """A User who runs the game, acts a server."""
 
     def __init__(self, 
-                 HOST: str = TEST_HOST, 
-                 PORT: int = TEST_PORT) -> None:
+                 HOST: str, 
+                 PORT: int) -> None:
         super().__init__()
         self.socket.bind((HOST, PORT))
-        self.clients = []
+        self.selector = selectors.DefaultSelector()
+        self.player_names = []
 
     def listen(self):
         self.socket.listen()
@@ -40,7 +38,7 @@ class Host(User):
         events = self.selector.select(timeout=None)
         for key, mask in events:
             if key.data is None:
-                self.register_accepted_sockets(key.fileobj)
+                self.register_accepted_sockets(key.fileobj) # pyright: ignore[reportArgumentType]
             else:
                 self.handle_connection(key, mask)
     
@@ -55,25 +53,32 @@ class Host(User):
     def handle_connection(self, 
                           key: selectors.SelectorKey, 
                           mask):
-        user_socket = key.fileobj
+        client_socket = key.fileobj
         data = key.data
         if mask & selectors.EVENT_READ:
-            recieved_data = user_socket.recv(1024)
+            recieved_data = client_socket.recv(1024) # pyright: ignore[reportAttributeAccessIssue]
             if recieved_data:
                 self.read_from_player(data, recieved_data)
             else:
-                self.selector.unregister(user_socket)
-                user_socket.close()
+                self.selector.unregister(client_socket)
+                client_socket.close() # pyright: ignore[reportAttributeAccessIssue]
         if mask & selectors.EVENT_WRITE:
-            self.write_to_player(user_socket, data)
+            self.write_to_player(client_socket, data)
                 
 
     def __del__(self):
         self.selector.close()
         return super().__del__()
 
-class Player(User):
-    """A User who joins a host, acts as a client"""
+class Client(User):
+    """A User who joins a host"""
+
+    def prompt(self):
+
+        raw_input = input("IP:Port -> ").split(":")
+        ip = raw_input[0]
+        port = int(raw_input[1])
+        return (ip, port)
 
     def join(self, HOST, PORT):
         self.socket.connect((HOST, PORT))
