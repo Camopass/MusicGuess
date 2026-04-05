@@ -2,6 +2,7 @@ import sys
 from networking import Client, Host
 from debug.networking import TEST_HOST, TEST_PORT
 import io
+from threading import Thread
 
 import MusicManager
 import os
@@ -16,12 +17,13 @@ def client():
     HOST, PORT = p.prompt()
     p.join(HOST, PORT)
     while True:
-        print(f"Got Back: {p.send_and_recieve_test()!r}")
+        print(f"Got Back: {p.parse_recieved_bytes(p.recieve())}")
 
 def host():
     print("Launching as host...")
-    h = Host(TEST_HOST, TEST_PORT)
+    h = Host("0.0.0.0", TEST_PORT)
     h.listen()
+    Thread(target= h.send_test, daemon=True).start()
     while True:
         h.manage_player_connections()
 
