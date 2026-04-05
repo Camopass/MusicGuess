@@ -1,7 +1,7 @@
 import pygame
 import imageio_ffmpeg as ffmpeg
 
-from scripts import Audio
+from scripts import audio
 
 
 class PlaybackController:
@@ -15,8 +15,8 @@ class PlaybackController:
         self.duration = -1
 
     def load(self):
-        self.audio = Audio.aac_to_ogg(self.audio)
-        self.duration = Audio.get_length(self.audio)
+        self.audio = audio.aac_to_ogg(self.audio)
+        self.duration = audio.get_length(self.audio)
         pygame.mixer.music.load(self.audio)
         self.loaded = True
 
