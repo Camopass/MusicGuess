@@ -2,7 +2,7 @@ import sys
 
 from gamedata import GameData
 from gameviews.waitingforhost import WaitingForHost
-from gameviews.welcome import WelcomeClient
+from gameviews.welcome import WelcomeClient, WelcomeHost
 from networking import Client, Host
 from debug.networking import TEST_HOST, TEST_PORT
 from dotenv import load_dotenv, find_dotenv
@@ -38,13 +38,14 @@ def main():
 
     pygame.display.set_caption("GENREALIKE")
 
-    game_data = GameData()
-    game_data.players = [Player("Jeremy"), Player("Gus"), Player("Cameron"), Player("BarackO")]
+    game_data = GameData(clock)
+    game_data.players = [Player("ThatGoblinKinga"), Player("JeremyJeremyyyy"), Player("CameronPassmore"), Player("BarackObamaAGod")]
     # view = Results(game_data, game_data.players[0], {game_data.players[0]: game_data.players[1], game_data.players[1]: game_data.players[1], game_data.players[2]: game_data.players[1], game_data.players[3]: game_data.players[1]})
-    view = WaitingForHost(game_data)
+    view = WelcomeHost(game_data)
 
     while running:
-        for event in pygame.event.get():
+        game_data.game_events = pygame.event.get()
+        for event in game_data.game_events:
             if event.type == pygame.QUIT:
                 running = False
 
@@ -52,7 +53,7 @@ def main():
         view.render(screen)
 
         pygame.display.flip()
-        clock.tick(60)
+        game_data.deltaTime = game_data.clock.tick(60) / 1000
 
     view.unload()
 
