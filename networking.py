@@ -1,6 +1,16 @@
 import socket
 import selectors
 import types
+from enum import IntEnum
+from gamestates import GameStateIDs
+
+class DataTypes:
+    GAME_STATE = 0
+    SONG_NAME = 1
+    ARTIST_NAME = 2
+    PLAY_COUNT = 3
+    ALBUM_ART = 4
+    PLAYER_NAME = 5
 
 class User:
 
@@ -85,4 +95,21 @@ class Client(User):
     
     def send_and_recieve_test(self):
         self.socket.sendall(bytes(input(), encoding='utf-8'))
-        return self.socket.recv(1024)
+    
+    def parse_recieved_bytes(self, recieved: bytes):
+        data_type = recieved[0]
+        data = recieved[1:]
+        if (data_type == DataTypes.GAME_STATE
+            or data_type == DataTypes.PLAY_COUNT):
+            parsed_data = int(data)
+        elif (data_type == DataTypes.SONG_NAME
+              or data_type == DataTypes.ARTIST_NAME
+              or data_type == DataTypes.PLAYER_NAME):
+            parsed_data = data.decode("utf-8")
+        elif data_type == DataTypes.ALBUM_ART:
+            parsed_data = data
+        else:
+            raise ValueError("First byte of data sent did not indicate type of data")
+
+        return(parsed_data, data)
+    
