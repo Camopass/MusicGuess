@@ -3,7 +3,8 @@ from pygame import Surface
 from networking import Host, Client, User
 from displayermanager import DisplayManager
 
-from globals import DEFAULT_HOST, DEFAULT_PORT
+from globals import DEFAULT_HOST, DEFAULT_PORT, START_MESSAGE, GameStateIDs
+from debug.networking import TEST_SONG
 from gameviews.gamestart import  GameStart
 
 class GameManager:
@@ -30,10 +31,8 @@ class GameManager:
         is_host = response.lower() == "y"
         if is_host:
             self.networker = Host(DEFAULT_HOST, DEFAULT_PORT)
-            self.networker.accept_connections_until(
-                lambda: input() is not None
-            )
-            self.gamestate_update = self.round
+            self.connections = self.networker.accept_connections_until_input()
+            self.gamestate_update = self.pre_game
         else:
             self.networker = Client()
             ip, port = self.networker.prompt()
@@ -42,10 +41,22 @@ class GameManager:
         
     def pre_game(self):
         if self.networker.is_host:
-            pass
+            print("Starting Round!")
+            self.networker.is_accepting_connections = False
+            self.networker.manage_player_connections()
+            self.networker.broadcast_to_all(START_MESSAGE)
+            self.gamestate_update = self.round
         else:
             print("Waiting for host to start the game!")
+            self.networker.await_round_start()
+            print("Starting Round!")
+            self.gamestate_update = self.round
+
         
     def round(self):
         if self.networker.is_host:
-            
+            print("Starting Round! (for real this time)")
+            self.networker.broadcast_song(TEST_SONG)
+            self.networker.manage_player_connections()
+        else:
+            print(self.networker.recieve_song())
