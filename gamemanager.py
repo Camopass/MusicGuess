@@ -76,8 +76,12 @@ class GameManager:
         else:
             round_start_event = threading.Event()
 
-            threading.Thread(target=lambda: self.networker.await_round_start(round_start_event), 
-                             daemon=True).start()
+            waiting = threading.Thread(target=lambda: self.networker.await_round_start(round_start_event), 
+                             daemon=True)
+            
+            if not waiting.is_alive():
+                waiting.start()
+
             while not round_start_event.is_set():
                 self.display_manager.draw()
             self.gamestate_update = self.round
