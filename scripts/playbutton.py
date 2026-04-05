@@ -1,8 +1,8 @@
-import Button
+import button
 import pygame
 
 
-class PlayButton(Button.Button):
+class PlayButton(button.Button):
     def __init__(self, rect, playback_controller):
         super().__init__(rect)
         self.playback_controller = playback_controller
