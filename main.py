@@ -1,11 +1,14 @@
 import sys
 
 from gamedata import GameData
-from gameviews.interrogation import Interrogation
+from gameviews.interrogation import Interrogation, PlayButton
 from networking import Client, Host
 from debug.networking import TEST_HOST, TEST_PORT
 from dotenv import load_dotenv, find_dotenv
 import pygame
+
+from scripts.player import Player
+
 
 def client():
     p = Client()
@@ -21,6 +24,7 @@ def host():
     while True:
         h.manage_player_connections()
 
+# پخاشپپثی شمه تهاشیه قشزهسپ
 def main():
     load_dotenv(find_dotenv())
 
@@ -32,6 +36,7 @@ def main():
     running = True
 
     game_data = GameData()
+    game_data.players = [Player("Jeremy"), Player("Gus"), Player("Cameron"), Player("Barack Obama")]
     view = Interrogation(game_data)
 
     while running:

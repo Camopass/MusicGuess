@@ -1,12 +1,11 @@
 import io
 import os
-
-import pygame
-
 import musicmanager
 from gameviews.colors import Colors
 from gameviews.gameview import GameView
 from scripts.playbackcontroller import PlaybackController
+import button
+import pygame
 
 
 class Interrogation(GameView):
@@ -27,9 +26,8 @@ class Interrogation(GameView):
         self.playback_controller.load()
         self.play_button = PlayButton(pygame.rect.Rect(500, 300, 75, 100), self.playback_controller)
 
-        self.player_buttons = []
-        for player in self.game_data.players:
-            self.player_buttons.append(PlayerButton(player))
+        self.player_buttons = [PlayerButton(pygame.rect.Rect(100 * i + 800, 100 * i + 350, 260, 100), player) for i, player in enumerate(self.game_data.players)]
+        print("setup done")
 
     def update(self):
         self.play_button.update()
@@ -73,17 +71,14 @@ class Interrogation(GameView):
         self.play_button.render(screen)
 
         # Choices
-
+        for player_button in self.player_buttons:
+            player_button.render(screen)
 
         # TODO: Progres bar, volume sliders
 
     def unload(self):
         self.playback_controller.unload()
         pygame.font.quit()
-
-
-import button
-import pygame
 
 
 class PlayButton(button.Button):
@@ -101,4 +96,15 @@ class PlayButton(button.Button):
 
 
 class PlayerButton(button.Button):
-    pass
+    def __init__(self, rect, player):
+        super().__init__(rect)
+        self.player = player
+
+    def render_image(self):
+        surface = pygame.Surface((260, 100), pygame.SRCALPHA).convert_alpha()
+        pygame.draw.rect(surface, Colors.BLUE, (0, 0, 250, 90))
+        pygame.draw.rect(surface, Colors.WHITE, (10, 10, 250, 90))
+        pygame.draw.rect(surface, Colors.BLUE, (5, 5, 240, 80))
+
+    def on_click(self):
+        pass
