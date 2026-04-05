@@ -9,7 +9,7 @@ class GameOver(GameView):
     def __init__(self, game_data, ranked_list):
         self.ranked_list = ranked_list
         self.courier_prime_60 = pygame.font.Font('assets/CourierPrime-Bold.ttf', 60)
-        self.space_mono_50 = pygame.font.Font('assets/SpaceMono-Regular.ttf', 50)
+        self.space_mono_50 = pygame.font.Font('assets/SpaceMono-Regular.ttf', 30)
         self.play_again_button = PlayAgainButton(pygame.rect.Rect(25, 550, 400, 150))
 
     def render(self, screen):
@@ -39,7 +39,7 @@ class GameOver(GameView):
                 color = Colors.BLUE
                 text_color = Colors.WHITE
             pygame.draw.rect(screen, color, (115 + voffset, 205 + hoffset, 340, 70))
-            screen.blit(self.space_mono_50.render(f"{i}).{player.name}", True, text_color), (120 + voffset, 205 + hoffset))
+            screen.blit(self.space_mono_50.render(f"{i}).{player.name}", True, text_color), (120 + voffset, 210 + hoffset))
 
         self.play_again_button.render(screen)
 

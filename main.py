@@ -1,6 +1,10 @@
 import sys
 
 from gamedata import GameData
+from gameviews.clientorhostselection import ClientOrHostSelection
+from gameviews.gameover import GameOver
+from gameviews.interrogation import Interrogation
+from gameviews.results import Results
 from gameviews.waitingforhost import WaitingForHost
 from gameviews.welcome import WelcomeClient, WelcomeHost
 from networking import Client, Host
@@ -40,6 +44,7 @@ def main():
     pygame.init()
     pygame.font.init()
     screen = pygame.display.set_mode((1280, 720))
+    pygame.display.set_icon(pygame.image.load("assets/appicon.png"))
     clock = pygame.time.Clock()
     running = True
 
@@ -47,8 +52,8 @@ def main():
 
     game_data = GameData(clock)
     game_data.players = [Player("ThatGoblinKinga"), Player("JeremyJeremyyyy"), Player("CameronPassmore"), Player("BarackObamaAGod")]
-    # view = Results(game_data, game_data.players[0], {game_data.players[0]: game_data.players[1], game_data.players[1]: game_data.players[1], game_data.players[2]: game_data.players[1], game_data.players[3]: game_data.players[1]})
-    view = WelcomeHost(game_data)
+    # view = Results(game_data, game_data.players[0], {game_data.players[0]: game_data.players[0], game_data.players[1]: game_data.players[0], game_data.players[2]: game_data.players[1], game_data.players[3]: game_data.players[0]})
+    view = ClientOrHostSelection()
 
     while running:
         game_data.game_events = pygame.event.get()
