@@ -2,7 +2,8 @@ import socket
 import selectors
 import types
 from enum import IntEnum
-from gamestates import GameStateIDs
+from typing import Callable
+import threading
 
 class DataTypes(IntEnum):
     GAME_STATE = 0
@@ -21,6 +22,10 @@ class User:
     
     def __del__(self):
         self.socket.close()
+
+    @property
+    def is_host(self) -> bool:
+        return isinstance(self, Host)
 
 class Host(User):
     """A User who runs the game, acts as a server."""
@@ -45,6 +50,26 @@ class Host(User):
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.selector.register(connection, events, data=data)
         return client_socket
+    
+    def accept_connections_until(self, condition: Callable):
+        stop_event = threading.Event()
+        self.listen()
+        connections = set()
+
+        def wait_for_stop():
+            while True:
+                if condition():
+                    stop_event.set()
+                    break
+        threading.Thread(target=wait_for_stop, daemon=True).start()
+
+        while not stop_event.is_set():
+            connections.add(self.manage_player_connections())
+        
+        return connections
+        
+
+
     
     def manage_player_connections(self):
         events = self.selector.select(timeout=None)
@@ -96,9 +121,11 @@ class Host(User):
 
 class Client(User):
     """A User who joins a host"""
+    def __init__(self):
+        super().__init__()
 
-    def prompt(self):
-
+    @staticmethod
+    def prompt():
         raw_input = input("IP:Port -> ").split(":")
         ip = raw_input[0]
         port = int(raw_input[1])
@@ -125,7 +152,7 @@ class Client(User):
         else:
             raise ValueError("First byte of data sent did not indicate type of data")
 
-        return(parsed_data, data)
+        return(parsed_data, data_type)
     
     def recieve(self):
         return self.socket.recv(1024)

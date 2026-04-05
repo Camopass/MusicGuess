@@ -1,6 +1,7 @@
 import sys
 
 from gamedata import GameData
+from gamemanager import GameManager
 from gameviews.interrogation import Interrogation
 from networking import Client, Host
 from debug.networking import TEST_HOST, TEST_PORT
@@ -38,23 +39,16 @@ def main():
     clock = pygame.time.Clock()
     running = True
 
-    game_data = GameData()
-    view = Interrogation(game_data)
+    # game_data = GameData()
+    # view = Interrogation(game_data)
+    gm = GameManager(screen)
 
     while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+        gm.update()
 
-        view.update()
-        view.render(screen)
-
-        pygame.display.flip()
-        clock.tick(60)
-
-    view.unload()
 
     pygame.quit()
+
 
 
 if __name__ == '__main__':
