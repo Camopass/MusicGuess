@@ -4,13 +4,14 @@ import types
 from enum import IntEnum
 from gamestates import GameStateIDs
 
-class DataTypes:
+class DataTypes(IntEnum):
     GAME_STATE = 0
     SONG_NAME = 1
     ARTIST_NAME = 2
     PLAY_COUNT = 3
     ALBUM_ART = 4
     PLAYER_NAME = 5
+    VOTE = 6
 
 class User:
 
@@ -22,7 +23,7 @@ class User:
         self.socket.close()
 
 class Host(User):
-    """A User who runs the game, acts a server."""
+    """A User who runs the game, acts as a server."""
 
     def __init__(self, 
                  HOST: str, 
@@ -30,19 +31,20 @@ class Host(User):
         super().__init__()
         self.socket.bind((HOST, PORT))
         self.selector = selectors.DefaultSelector()
-        self.player_names = []
 
     def listen(self):
         self.socket.listen()
         self.socket.setblocking(False)
         self.selector.register(self.socket, selectors.EVENT_READ, data=None)
 
-    def register_accepted_sockets(self, user_socket: socket.socket):
-        connection, address = user_socket.accept()
+    def register_accepted_sockets(self, client_socket: socket.socket):
+        connection, address = client_socket.accept()
+        print(f"{address} Connected")
         connection.setblocking(False)
-        data = types.SimpleNamespace(addr=address, inb=b"", outb=b"")
+        data = types.SimpleNamespace(addr=address, player_name=b"", outb=b"")
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.selector.register(connection, events, data=data)
+        return client_socket
     
     def manage_player_connections(self):
         events = self.selector.select(timeout=None)
@@ -57,8 +59,20 @@ class Host(User):
             sent = user_socket.send(socket_data.outb)
             socket_data.outb = socket_data.outb[sent:]
 
-    def read_from_player(self, socket_data, recieved_data):
-        socket_data.outb += recieved_data
+    def send_test(self):
+        while True:
+            send = input()
+            for key in self.selector.get_map().values():
+                if key.data is not None:
+                    key.data.outb += DataTypes.SONG_NAME.to_bytes(1, 'little') + bytes(send, "utf-8")
+
+    def read_from_player(self, recieved: bytes):
+        data_type = recieved[0]
+        data = recieved[1:]
+        if data_type != DataTypes.PLAYER_NAME:
+            raise ValueError("Client sent unexpected data type to host")
+        else:
+            return (data.decode("utf-8"), data_type)
 
     def handle_connection(self, 
                           key: selectors.SelectorKey, 
@@ -68,7 +82,7 @@ class Host(User):
         if mask & selectors.EVENT_READ:
             recieved_data = client_socket.recv(1024) # pyright: ignore[reportAttributeAccessIssue]
             if recieved_data:
-                self.read_from_player(data, recieved_data)
+                self.read_from_player(recieved_data)
             else:
                 self.selector.unregister(client_socket)
                 client_socket.close() # pyright: ignore[reportAttributeAccessIssue]
@@ -113,3 +127,5 @@ class Client(User):
 
         return(parsed_data, data)
     
+    def recieve(self):
+        return self.socket.recv(1024)
