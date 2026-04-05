@@ -25,7 +25,7 @@ class Song:
                     json["album_art"])
     
     @property
-    def json_mesasge(self) -> bytes:
+    def json_message(self) -> bytes:
         data = {
             "type": "song",
             "title": self.title,

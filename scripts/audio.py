@@ -1,8 +1,4 @@
-import os
-import pathlib
-import sys
-
-from imageio_ffmpeg import get_ffmpeg_exe, count_frames_and_secs
+from imageio_ffmpeg import get_ffmpeg_exe
 import subprocess
 import shlex
 

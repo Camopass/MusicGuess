@@ -2,7 +2,6 @@ import pygame
 
 from gameviews.colors import Colors
 from gameviews.gameview import GameView
-from gameviews.welcome import WelcomeClient
 
 
 class WaitingForHost(GameView):

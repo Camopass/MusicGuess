@@ -32,10 +32,10 @@ class GameOver(GameView):
             pygame.draw.rect(screen, Colors.BLUE, (120 + voffset, 210 + hoffset, 350, 80))
             color = Colors.WHITE
             text_color = Colors.BLUE
-            if (i == 0):
+            if i == 0:
                 color = Colors.RED
                 text_color = Colors.WHITE
-            elif (i == 3):
+            elif i == 3:
                 color = Colors.BLUE
                 text_color = Colors.WHITE
             pygame.draw.rect(screen, color, (115 + voffset, 205 + hoffset, 340, 70))

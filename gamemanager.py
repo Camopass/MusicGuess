@@ -1,9 +1,8 @@
-from typing import Union
 from pygame import Surface
 from networking import Host, Client, User
 from displayermanager import DisplayManager
 
-from globals import DEFAULT_HOST, DEFAULT_PORT, START_MESSAGE, END_ROUND_MESSAGE, GameStateIDs
+from globals import DEFAULT_HOST, DEFAULT_PORT, START_MESSAGE, END_ROUND_MESSAGE
 from debug.networking import TEST_SONG
 from gameviews.gamestart import  GameStart
 

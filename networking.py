@@ -2,8 +2,6 @@ import socket
 import selectors
 import types
 import json
-from enum import IntEnum
-from typing import Callable, Union
 import threading
 from song import Song
 from globals import GameStateIDs
@@ -119,7 +117,7 @@ class Host(User):
 
     def broadcast_song(self,
                        song: Song):
-        self.broadcast_to_all(song.json_mesasge)
+        self.broadcast_to_all(song.json_message)
 
     def handle_connection(self, 
                           key: selectors.SelectorKey, 

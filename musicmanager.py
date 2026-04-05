@@ -1,4 +1,3 @@
-from logging import root
 from xml.etree import ElementTree
 
 import requests
@@ -50,13 +49,13 @@ def get_image(song):
     }
     mb_resp = requests.get(mb_url, params=mb_params).content
     root = ElementTree.fromstring(mb_resp)
-    id = root[0][0].attrib.get("id")
-    url = f"https://coverartarchive.org/release/{id}/"
+    mbid = root[0][0].attrib.get("id")
+    url = f"https://coverartarchive.org/release/{mbid}/"
     headers = {
         "User-Agent": "MusicGuess/0.01 (camopass@gmail.com)"
     }
     resp = requests.get(url, headers=headers)
-    if (resp.status_code == 200):
+    if resp.status_code == 200:
         resp = resp.json()
         image_url = resp['images'][0]['image']
         return requests.get(image_url).content

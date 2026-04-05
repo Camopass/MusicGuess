@@ -1,6 +1,4 @@
 import pygame
-import imageio_ffmpeg as ffmpeg
-
 from scripts import audio
 
 
@@ -40,9 +38,11 @@ class PlaybackController:
         pygame.mixer.music.stop()
 
     def get_progress(self):
-        if self.loading:
+        if self.loaded:
             pos = self.last_pos + pygame.mixer.music.get_pos()
             return pos / self.duration
+        else:
+            return 0
 
     def on_end(self):
         self.playing = False
