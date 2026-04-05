@@ -1,17 +1,12 @@
 import socket
 import selectors
 import types
+import json
 from enum import IntEnum
-from gamestates import GameStateIDs
-
-class DataTypes(IntEnum):
-    GAME_STATE = 0
-    SONG_NAME = 1
-    ARTIST_NAME = 2
-    PLAY_COUNT = 3
-    ALBUM_ART = 4
-    PLAYER_NAME = 5
-    VOTE = 6
+from typing import Callable, Union
+import threading
+from song import Song
+from globals import GameStateIDs
 
 class User:
 
@@ -22,6 +17,32 @@ class User:
     def __del__(self):
         self.socket.close()
 
+    @property
+    def is_host(self) -> bool:
+        return isinstance(self, Host)
+    
+    def recieve(self):
+        length = int.from_bytes(self.recieve_bytes(4), "little")
+        return self.__parse_to_json(self.recieve_bytes(length))
+    
+    def recieve_bytes(self, n_bytes: int):
+        data = b""
+        while len(data) < n_bytes:
+            chunk = self.socket.recv(n_bytes - len(data))
+            if not chunk:
+                raise ConnectionError("Disconnected")
+            data += chunk
+        return data
+    
+    @staticmethod
+    def __parse_to_json(data: bytes):
+        return json.loads(data.decode("utf-8"))
+    
+    @staticmethod
+    def format_message(message: bytes):
+        return len(message).to_bytes(4, "little") + message[0:]
+
+
 class Host(User):
     """A User who runs the game, acts as a server."""
 
@@ -31,10 +52,12 @@ class Host(User):
         super().__init__()
         self.socket.bind((HOST, PORT))
         self.selector = selectors.DefaultSelector()
+        self.is_accepting_connections = True
 
     def listen(self):
         self.socket.listen()
         self.socket.setblocking(False)
+        self.socket.settimeout(1.0)
         self.selector.register(self.socket, selectors.EVENT_READ, data=None)
 
     def register_accepted_sockets(self, client_socket: socket.socket):
@@ -46,10 +69,31 @@ class Host(User):
         self.selector.register(connection, events, data=data)
         return client_socket
     
+    def accept_connections_until_input(self):
+        stop_event = threading.Event()
+        self.listen()
+        connections = set()
+
+        def wait_for_stop():
+            while True:
+                if input():
+                    stop_event.set()
+                    break
+        threading.Thread(target=wait_for_stop, daemon=True).start()
+
+        while not stop_event.is_set():
+            try:
+                connections.add(self.manage_player_connections())
+            except socket.timeout:
+                pass
+        
+        return connections
+
     def manage_player_connections(self):
-        events = self.selector.select(timeout=None)
+        events = self.selector.select(timeout=1)
         for key, mask in events:
-            if key.data is None:
+            if (key.data is None
+                and self.is_accepting_connections):
                 self.register_accepted_sockets(key.fileobj) # pyright: ignore[reportArgumentType]
             else:
                 self.handle_connection(key, mask)
@@ -59,20 +103,15 @@ class Host(User):
             sent = user_socket.send(socket_data.outb)
             socket_data.outb = socket_data.outb[sent:]
 
-    def send_test(self):
-        while True:
-            send = input()
+    def broadcast_to_all(self, 
+                         data: bytes):
             for key in self.selector.get_map().values():
-                if key.data is not None:
-                    key.data.outb += DataTypes.SONG_NAME.to_bytes(1, 'little') + bytes(send, "utf-8")
+                if (key.data is not None):
+                    key.data.outb += self.format_message(data)
 
-    def read_from_player(self, recieved: bytes):
-        data_type = recieved[0]
-        data = recieved[1:]
-        if data_type != DataTypes.PLAYER_NAME:
-            raise ValueError("Client sent unexpected data type to host")
-        else:
-            return (data.decode("utf-8"), data_type)
+    def broadcast_song(self,
+                       song: Song):
+        self.broadcast_to_all(song.json_mesasge)
 
     def handle_connection(self, 
                           key: selectors.SelectorKey, 
@@ -82,7 +121,7 @@ class Host(User):
         if mask & selectors.EVENT_READ:
             recieved_data = client_socket.recv(1024) # pyright: ignore[reportAttributeAccessIssue]
             if recieved_data:
-                self.read_from_player(recieved_data)
+                pass
             else:
                 self.selector.unregister(client_socket)
                 client_socket.close() # pyright: ignore[reportAttributeAccessIssue]
@@ -96,9 +135,11 @@ class Host(User):
 
 class Client(User):
     """A User who joins a host"""
+    def __init__(self):
+        super().__init__()
 
-    def prompt(self):
-
+    @staticmethod
+    def prompt():
         raw_input = input("IP:Port -> ").split(":")
         ip = raw_input[0]
         port = int(raw_input[1])
@@ -110,22 +151,14 @@ class Client(User):
     def send_and_recieve_test(self):
         self.socket.sendall(bytes(input(), encoding='utf-8'))
     
-    def parse_recieved_bytes(self, recieved: bytes):
-        data_type = recieved[0]
-        data = recieved[1:]
-        if (data_type == DataTypes.GAME_STATE
-            or data_type == DataTypes.PLAY_COUNT):
-            parsed_data = int(data)
-        elif (data_type == DataTypes.SONG_NAME
-              or data_type == DataTypes.ARTIST_NAME
-              or data_type == DataTypes.PLAYER_NAME):
-            parsed_data = data.decode("utf-8")
-        elif data_type == DataTypes.ALBUM_ART:
-            parsed_data = data
-        else:
-            raise ValueError("First byte of data sent did not indicate type of data")
+    def recieve_song(self):
+        data = self.recieve()
+        assert data['type'] == "song"
+        return Song.from_json(data)
 
-        return(parsed_data, data)
-    
-    def recieve(self):
-        return self.socket.recv(1024)
+    def await_round_start(self):
+        round_start = False
+        while not round_start:
+            data = self.recieve()
+            round_start = (data["type"] == "gamestate"
+                           and data["state"] == GameStateIDs.IN_ROUND)
