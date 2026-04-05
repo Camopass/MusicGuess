@@ -56,8 +56,10 @@ def get_image(song):
         "User-Agent": "MusicGuess/0.01 (camopass@gmail.com)"
     }
     resp = requests.get(url, headers=headers)
-    print(resp.status_code)
-    print(resp.content)
-    resp = resp.json()
-    image_url = resp['images'][0]['image']
-    return requests.get(image_url).content
+    if (resp.status_code == 200):
+        resp = resp.json()
+        image_url = resp['images'][0]['image']
+        return requests.get(image_url).content
+    else:
+        with open('assets/covernotfound.png', 'rb') as f:
+            return f.read()

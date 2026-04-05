@@ -1,5 +1,6 @@
 import sys
 
+from gamedata import GameData
 from gameviews.interrogation import Interrogation
 from networking import Client, Host
 from debug.networking import TEST_HOST, TEST_PORT
@@ -11,9 +12,6 @@ import musicmanager
 import os
 from dotenv import load_dotenv, find_dotenv
 import pygame
-
-from scripts.playbutton import PlayButton
-from scripts.playbackcontroller import PlaybackController
 
 def client():
     p = Client()
@@ -40,7 +38,8 @@ def main():
     clock = pygame.time.Clock()
     running = True
 
-    view = Interrogation()
+    game_data = GameData()
+    view = Interrogation(game_data)
 
     while running:
         for event in pygame.event.get():
