@@ -1,12 +1,11 @@
 import io
 import os
-
-import pygame
-
 import musicmanager
 from gameviews.colors import Colors
 from gameviews.gameview import GameView
 from scripts.playbackcontroller import PlaybackController
+import button
+import pygame
 
 
 class Interrogation(GameView):
@@ -15,7 +14,7 @@ class Interrogation(GameView):
         self.game_data = game_data
         self.api_key = os.getenv("API_KEY")
 
-        self.song = musicmanager.get_top_songs("s3nse1_snorlax", self.api_key)[0]
+        self.song = musicmanager.get_top_songs("ThatGoblinKing", self.api_key)[0]
         self.song_audio = musicmanager.download_song(self.song)
         self.album_cover = musicmanager.get_image(self.song)
         self.song.cover = io.BytesIO(self.album_cover)
@@ -27,12 +26,13 @@ class Interrogation(GameView):
         self.playback_controller.load()
         self.play_button = PlayButton(pygame.rect.Rect(500, 300, 75, 100), self.playback_controller)
 
-        self.player_buttons = []
-        for player in self.game_data.players:
-            self.player_buttons.append(PlayerButton(player))
+        self.player_buttons = [PlayerButton(pygame.rect.Rect(40 * i + 775, 115 * i + 175, 300, 100), player) for i, player in enumerate(self.game_data.players)]
+        print("setup done")
 
     def update(self):
         self.play_button.update()
+        for player_button in self.player_buttons:
+            player_button.update()
 
     def render(self, screen):
 
@@ -73,17 +73,13 @@ class Interrogation(GameView):
         self.play_button.render(screen)
 
         # Choices
-
+        for player_button in self.player_buttons:
+            player_button.render(screen)
 
         # TODO: Progres bar, volume sliders
 
     def unload(self):
         self.playback_controller.unload()
-        pygame.font.quit()
-
-
-import button
-import pygame
 
 
 class PlayButton(button.Button):
@@ -101,4 +97,20 @@ class PlayButton(button.Button):
 
 
 class PlayerButton(button.Button):
-    pass
+    def __init__(self, rect, player):
+        super().__init__(rect)
+        self.player = player
+
+    def render_image(self):
+        surface = pygame.Surface((300, 100), pygame.SRCALPHA).convert_alpha()
+        pygame.draw.rect(surface, Colors.BLUE, (5, 5, 295, 90))
+        pygame.draw.rect(surface, Colors.BLUE, (0, 0, 295, 90))
+        pygame.draw.rect(surface, Colors.WHITE, (5, 5, 285, 80))
+
+        space_mono_60 = pygame.font.Font("./assets/SpaceMono-Regular.ttf", 60)
+        surface.blit(space_mono_60.render(self.player.name, True, Colors.BLUE), (7, 3))
+
+        return surface
+
+    def on_click(self):
+        pass
