@@ -60,6 +60,7 @@ class Host(User):
         self.is_accepting_votes = False
         self.player_names = set()
         self.all_votes = {}
+        self.__listening_started = False
 
     def listen(self):
         self.socket.listen()
@@ -76,27 +77,22 @@ class Host(User):
         self.selector.register(connection, events, data=data)
         return client_socket
     
-    def accept_connections_until_input(self):
-        stop_event = threading.Event()
-        self.listen()
+    def accept_connections_until_true(self, condition: bool, draw):
+    
+        if not self.__listening_started:
+            self.listen()
+            self.__listening_started = True
 
-        def wait_for_stop():
-            while True:
-                if input():
-                    stop_event.set()
-                    break
-        threading.Thread(target=wait_for_stop, daemon=True).start()
-
-        while not stop_event.is_set():
-            try:
-                self.manage_player_connections()
-            except socket.timeout:
-                pass
-        
-        return self.player_names
+        self.manage_player_connections()
+        draw()
+        if condition:
+            # stop_event.set()
+            # listen_thread.join()
+            
+            return self.player_names
 
     def manage_player_connections(self):
-        events = self.selector.select(timeout=1)
+        events = self.selector.select(timeout=0)
         for key, mask in events:
             if (key.data is None
                 and self.is_accepting_connections):
@@ -169,12 +165,13 @@ class Client(User):
         assert data['type'] == "song"
         return Song.from_json(data)
 
-    def await_round_start(self):
+    def await_round_start(self, event: threading.Event):
         round_start = False
         while not round_start:
             data = self.recieve()
             round_start = (data["type"] == "gamestate"
                            and data["state"] == GameStateIDs.IN_ROUND)
+            event.set()
     
     def await_round_end(self, event: threading.Event):
         round_end = False

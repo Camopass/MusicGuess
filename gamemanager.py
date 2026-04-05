@@ -1,17 +1,28 @@
 from pygame import Surface
 from networking import Host, Client, User
 from displayermanager import DisplayManager
+import threading
 
 from globals import DEFAULT_HOST, DEFAULT_PORT, START_MESSAGE, END_ROUND_MESSAGE
 from debug.networking import TEST_SONG
-from gameviews.gamestart import  GameStart
+from gameviews import (
+    clientorhostselection,
+    colors,
+    gameover,
+    interrogation,
+    results,
+    waitingforhost,
+    welcome
+)
+from gamedata import GameData
 
 class GameManager:
 
-    def __init__(self, window: Surface) -> None:
-        self.display_manager = DisplayManager(window, GameStart())
+    def __init__(self, window: Surface, gamedata: GameData) -> None:
+        self.display_manager = DisplayManager(window, clientorhostselection.ClientOrHostSelection())
         self.gamestate_update = self.game_start
         self.round_started = False
+        self.gamedata = gamedata
     
     def make_networker(self, 
                        is_host: bool = False) -> User:
@@ -23,22 +34,36 @@ class GameManager:
         pass
 
     def update(self, ticks):
-        # self.display_manager.draw()
         self.gamestate_update(ticks)
 
     def game_start(self, *args):
-        response = input("Are you hosting? y/N")
-        is_host = response.lower() == "y"
-        if is_host:
+        self.display_manager.draw()
+        if self.display_manager.gameview.is_host == True:
+            self.gamestate_update = self.welcome_host
+            self.display_manager.switch_gameviews(welcome.WelcomeHost(self.gamedata))
             self.networker = Host(DEFAULT_HOST, DEFAULT_PORT)
-            self.playernames = self.networker.accept_connections_until_input()
-            self.gamestate_update = self.pre_game
-        else:
-            self.networker = Client()
-            ip, port, name = self.networker.prompt()
-            self.name = name
+        elif self.display_manager.gameview.is_host == False:
+            self.networker = Client()            
+            self.gamestate_update = self.client_get_info
+            self.display_manager.switch_gameviews(welcome.WelcomeClient(self.gamedata))
+    
+    def welcome_host(self, *args):
+        self.playernames = self.networker.accept_connections_until_true(self.display_manager.gameview.button_pressed,
+                                                                        self.display_manager.draw)
+
+
+    def client_get_info(self, *args):
+        self.display_manager.draw()
+
+        if self.display_manager.gameview.button_pressed:
+            raw = self.display_manager.gameview.address_text.text.split(":")
+            ip = raw[0]
+            port = int(raw[1])
+            name = self.display_manager.gameview.username_text.text
             self.networker.join(ip, port, name)
             self.gamestate_update = self.pre_game
+            self.display_manager.switch_gameviews(waitingforhost.WaitingForHost(self.gamedata))
+        
         
     def pre_game(self, *args):
         if self.networker.is_host:
@@ -49,9 +74,12 @@ class GameManager:
             self.networker.broadcast_to_all(START_MESSAGE)
             self.gamestate_update = self.round
         else:
-            print("Waiting for host to start the game!")
-            self.networker.await_round_start()
-            print("Starting Round!")
+            round_start_event = threading.Event()
+
+            threading.Thread(target=lambda: self.networker.await_round_start(round_start_event), 
+                             daemon=True).start()
+            while not round_start_event.is_set():
+                self.display_manager.draw()
             self.gamestate_update = self.round
             
     def round(self, ticks: int):

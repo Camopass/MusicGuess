@@ -11,11 +11,15 @@ class WelcomeClient(GameView):
         self.game_data = game_data
         self.courier_prime_60 = pygame.font.Font('assets/CourierPrime-Bold.ttf', 60)
         self.space_mono_60 = pygame.font.Font('assets/SpaceMono-Regular.ttf', 60)
-        self.next_button = NextButton(pygame.Rect(900, 600, 350, 100))
+        self.next_button = NextButton(pygame.Rect(900, 600, 350, 100), self.press_button)
         self.username_text = TextFieldCharLimit(pygame.rect.Rect(105, 255, 750, 75), 15, game_data,
                                                 self.space_mono_60,(10, -5), Colors.BLUE)
         self.address_text = TextFieldCharLimit(pygame.rect.Rect(105, 455, 750, 75), 21, game_data,
                                                self.space_mono_60,(10, -5), Colors.BLUE)
+        self.button_pressed = False
+
+    def press_button(self):
+        self.button_pressed = True
 
     def render(self, screen):
         screen.fill(Colors.WHITE)
@@ -59,9 +63,11 @@ class WelcomeClient(GameView):
 
 
 class NextButton(Button):
-    def __init__(self, rect):
+    def __init__(self, rect, callback):
         super().__init__(rect)
         self.space_mono_60 = pygame.font.Font('assets/SpaceMono-Regular.ttf', 60)
+
+        self.on_click = callback
 
     def on_click(self):
         pass
@@ -127,7 +133,11 @@ class WelcomeHost(GameView):
         self.game_data = game_data
         self.courier_prime_60 = pygame.font.Font('assets/CourierPrime-Bold.ttf', 60)
         self.space_mono_40 = pygame.font.Font('assets/SpaceMono-Regular.ttf', 40)
-        self.ready_button = ReadyButton(pygame.rect.Rect(950, 625, 300, 85))
+        self.ready_button = ReadyButton(pygame.rect.Rect(950, 625, 300, 85), self.press_button)
+        self.button_pressed = False
+
+    def press_button(self):
+        self.button_pressed = True
 
     def update(self):
         self.ready_button.update()
@@ -159,9 +169,10 @@ class WelcomeHost(GameView):
         pass
 
 class ReadyButton(Button):
-    def __init__(self, rect):
+    def __init__(self, rect, callback):
         super().__init__(rect)
         self.space_mono_40 = pygame.font.Font('assets/SpaceMono-Regular.ttf', 40)
+        self.on_click = callback
 
     def render_image(self):
         surface = pygame.Surface((self.rect.width, self.rect.height), flags=pygame.SRCALPHA).convert_alpha()

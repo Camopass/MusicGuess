@@ -8,13 +8,19 @@ from gameviews.gameview import GameView
 class ClientOrHostSelection(GameView):
     def __init__(self):
         super().__init__()
-        self.client_button = ClientButton(pygame.Rect(125, 300, 450, 150))
-        self.host_button = HostButton(pygame.Rect(700, 300, 450, 150))
+        self.client_button = ClientButton(pygame.Rect(125, 300, 450, 150), self.client_button_callback)
+        self.host_button = HostButton(pygame.Rect(700, 300, 450, 150), self.host_button_callback)
         self.courier_prime_60 = pygame.font.Font('assets/CourierPrime-Bold.ttf', 60)
+        self.is_host = None
+
+    def host_button_callback(self): self.is_host = True
+
+    def client_button_callback(self):
+        self.is_host = False
 
     def update(self):
-        self.client_button.update()
-        self.host_button.update()
+            self.client_button.update()
+            self.host_button.update()
 
     def render(self, screen):
         screen.fill(Colors.WHITE)
@@ -38,9 +44,10 @@ class ClientOrHostSelection(GameView):
 
 
 class ClientButton(Button):
-    def __init__(self, rect):
+    def __init__(self, rect, callback):
         super().__init__(rect)
         self.space_mono_40 = pygame.font.Font('assets/SpaceMono-Regular.ttf', 40)
+        self.callback = callback
 
     def render_image(self):
         surface = pygame.Surface((self.rect.width, self.rect.height), flags=pygame.SRCALPHA).convert_alpha()
@@ -51,11 +58,13 @@ class ClientButton(Button):
         return surface
 
     def on_click(self):
-        pass
+        self.callback()
+        return False
 
 class HostButton(Button):
-    def __init__(self, rect):
+    def __init__(self, rect, callback):
         self.space_mono_40 = pygame.font.Font('assets/SpaceMono-Regular.ttf', 40)
+        self.on_click = callback
         super().__init__(rect)
 
     def render_image(self):
@@ -67,4 +76,4 @@ class HostButton(Button):
         return surface
 
     def on_click(self):
-        pass
+        return True

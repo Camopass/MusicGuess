@@ -12,6 +12,7 @@ from debug.networking import TEST_HOST, TEST_PORT
 import gameviews
 import io
 from threading import Thread
+from gamemanager import GameManager
 
 import musicmanager
 import os
@@ -50,9 +51,12 @@ def main():
 
     pygame.display.set_caption("GENREALIKE")
 
+    
+
     game_data = GameData(clock)
     game_data.players = [Player("ThatGoblinKinga"), Player("JeremyJeremyyyy"), Player("CameronPassmore"), Player("BarackObamaAGod")]
     # view = Results(game_data, game_data.players[0], {game_data.players[0]: game_data.players[0], game_data.players[1]: game_data.players[0], game_data.players[2]: game_data.players[1], game_data.players[3]: game_data.players[0]})
+    game_manager = GameManager(screen, game_data)
     view = ClientOrHostSelection()
 
     while running:
@@ -61,8 +65,7 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        view.update()
-        view.render(screen)
+        game_manager.update(pygame.time.get_ticks)
 
         pygame.display.flip()
         game_data.deltaTime = game_data.clock.tick(60) / 1000
