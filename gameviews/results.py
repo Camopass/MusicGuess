@@ -20,9 +20,9 @@ class Results(GameView):
                 self.losers.append(player)
         self.next_button = NextButton(pygame.rect.Rect(930, 620, 310, 85))
         self.courier_prime_60 = pygame.font.Font("./assets/CourierPrime-Bold.ttf", 60)
-        self.space_mono_60 = pygame.font.Font("./assets/SpaceMono-Regular.ttf", 60)
-        self.space_mono_40 = pygame.font.Font("./assets/SpaceMono-Regular.ttf", 40)
-        self.space_mono_small = pygame.font.Font("./assets/SpaceMono-Regular.ttf", 30)
+        self.space_mono_35 = pygame.font.Font("./assets/SpaceMono-Regular.ttf", 35)
+        self.space_mono_20 = pygame.font.Font("./assets/SpaceMono-Regular.ttf", 30)
+        self.space_mono_small = pygame.font.Font("./assets/SpaceMono-Regular.ttf", 20)
         self.space_mono_tiny = pygame.font.Font("./assets/SpaceMono-Regular.ttf", 15)
 
     def render(self, screen):
@@ -39,38 +39,38 @@ class Results(GameView):
         pygame.draw.lines(screen, Colors.RED, False, ((1105, 160), (1195, 160), (1195, 230)), 5)
         pygame.draw.line(screen, Colors.RED, (640, 350), (640, 550), 5)
 
-        screen.blit(self.space_mono_40.render("IT WAS...", True, Colors.BLUE), (450, 120))
+        screen.blit(self.space_mono_20.render("IT WAS...", True, Colors.BLUE), (475, 135))
 
         pygame.draw.rect(screen, Colors.BLUE, (450, 190, 350, 75))
         pygame.draw.rect(screen, Colors.BLUE, (460, 200, 350, 75))
         pygame.draw.rect(screen, Colors.RED, (455, 195, 340, 65))
-        screen.blit(self.space_mono_60.render(self.winning_player.name, True, Colors.WHITE), (465, 180))
+        screen.blit(self.space_mono_35.render(self.winning_player.name, True, Colors.WHITE), (465, 195))
 
-        screen.blit(self.space_mono_60.render("INCORRECT", True, Colors.BLUE), (850, 150))
-        screen.blit(self.space_mono_60.render("CORRECT", True, Colors.BLUE), (100, 590))
+        screen.blit(self.space_mono_35.render("INCORRECT", True, Colors.BLUE), (1000, 155))
+        screen.blit(self.space_mono_35.render("CORRECT", True, Colors.BLUE), (100, 615))
 
         self.next_button.render(screen)
 
         for i, player in enumerate(self.winning_players):
-            hoffset = (i % 2) * 100
-            voffset = 0 if i < 2 else 250
-            pygame.draw.rect(screen, Colors.BLUE, (120 + voffset, 300 + hoffset, 200, 75))
-            pygame.draw.rect(screen, Colors.BLUE, (130 + voffset, 310 + hoffset, 200, 75))
-            pygame.draw.rect(screen, Colors.WHITE, (125 + voffset, 305 + hoffset, 190, 65))
-            screen.blit(self.space_mono_40.render(player.name, True, Colors.BLUE), (130 + voffset, 300 + hoffset))
+            hoffset = (i % 2) * 150
+            voffset = 0 if i < 2 else 275
+            pygame.draw.rect(screen, Colors.BLUE, (95 + voffset, 300 + hoffset, 250, 50))
+            pygame.draw.rect(screen, Colors.BLUE, (105 + voffset, 310 + hoffset, 250, 50))
+            pygame.draw.rect(screen, Colors.WHITE, (100 + voffset, 305 + hoffset, 240, 40))
+            screen.blit(self.space_mono_small.render(player.name, True, Colors.BLUE), (130 + voffset, 300 + hoffset))
 
         for i, player in enumerate(self.losers):
-            hoffset = (i % 2) * 100
-            voffset = 0 if i < 2 else 250
-            pygame.draw.rect(screen, Colors.BLUE, (728 + voffset, 300 + hoffset, 140, 50))
-            pygame.draw.rect(screen, Colors.BLUE, (738 + voffset, 310 + hoffset, 140, 50))
-            pygame.draw.rect(screen, Colors.WHITE, (733 + voffset, 305 + hoffset, 130, 40))
-            screen.blit(self.space_mono_small.render(player.name, True, Colors.BLUE), (733 + voffset, 300 + hoffset))
-            # screen.blit(self.space_mono_tiny.render("Thought...", True, Colors.BLUE), (728 + voffset, 360 + hoffset))
-            pygame.draw.rect(screen, Colors.BLUE, (820 + voffset, 335 + hoffset, 90, 30))
-            pygame.draw.rect(screen, Colors.BLUE, (830 + voffset, 345 + hoffset, 90, 30))
-            pygame.draw.rect(screen, Colors.WHITE, (825 + voffset, 340 + hoffset, 80, 20))
-            screen.blit(self.space_mono_tiny.render(self.votes[player].name, True, Colors.BLUE), (830 + voffset, 340 + hoffset))
+            hoffset = (i % 2) * 150
+            voffset = 0 if i < 2 else 275
+            pygame.draw.rect(screen, Colors.BLUE, (650 + voffset, 300 + hoffset, 250, 50))
+            pygame.draw.rect(screen, Colors.BLUE, (660 + voffset, 310 + hoffset, 250, 50))
+            pygame.draw.rect(screen, Colors.WHITE, (655 + voffset, 305 + hoffset, 240, 40))
+            screen.blit(self.space_mono_small.render(player.name, True, Colors.BLUE), (655 + voffset, 305 + hoffset))
+            screen.blit(self.space_mono_tiny.render("Thought...", True, Colors.BLUE), (655 + voffset, 360 + hoffset))
+            pygame.draw.rect(screen, Colors.BLUE, (750 + voffset, 350 + hoffset, 150, 30))
+            pygame.draw.rect(screen, Colors.BLUE, (760 + voffset, 360 + hoffset, 150, 30))
+            pygame.draw.rect(screen, Colors.WHITE, (755 + voffset, 355 + hoffset, 140, 20))
+            screen.blit(self.space_mono_tiny.render(self.votes[player].name, True, Colors.BLUE), (755 + voffset, 355 + hoffset))
 
 
     def update(self):

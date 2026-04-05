@@ -76,7 +76,7 @@ class Interrogation(GameView):
         for player_button in self.player_buttons:
             player_button.render(screen)
 
-        # TODO: Progres bar, volume sliders
+        # TODO: Progress bar, volume sliders
 
     def unload(self):
         self.playback_controller.unload()
@@ -107,8 +107,8 @@ class PlayerButton(button.Button):
         pygame.draw.rect(surface, Colors.BLUE, (0, 0, 295, 90))
         pygame.draw.rect(surface, Colors.WHITE, (5, 5, 285, 80))
 
-        space_mono_60 = pygame.font.Font("./assets/SpaceMono-Regular.ttf", 60)
-        surface.blit(space_mono_60.render(self.player.name, True, Colors.BLUE), (7, 3))
+        space_mono_60 = pygame.font.Font("./assets/SpaceMono-Regular.ttf", 25)
+        surface.blit(space_mono_60.render(self.player.name, True, Colors.BLUE), (10, 10))
 
         return surface
 
