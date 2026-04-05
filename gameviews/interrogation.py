@@ -7,12 +7,12 @@ import musicmanager
 from gameviews.colors import Colors
 from gameviews.gameview import GameView
 from scripts.playbackcontroller import PlaybackController
-from scripts.playbutton import PlayButton
 
 
 class Interrogation(GameView):
 
-    def __init__(self):
+    def __init__(self, game_data):
+        self.game_data = game_data
         self.api_key = os.getenv("API_KEY")
 
         self.song = musicmanager.get_top_songs("s3nse1_snorlax", self.api_key)[0]
@@ -26,6 +26,10 @@ class Interrogation(GameView):
         self.playback_controller = PlaybackController(self.song_audio)
         self.playback_controller.load()
         self.play_button = PlayButton(pygame.rect.Rect(500, 300, 75, 100), self.playback_controller)
+
+        self.player_buttons = []
+        for player in self.game_data.players:
+            self.player_buttons.append(PlayerButton(player))
 
     def update(self):
         self.play_button.update()
@@ -68,7 +72,33 @@ class Interrogation(GameView):
         # Play Button
         self.play_button.render(screen)
 
+        # Choices
+
+
+        # TODO: Progres bar, volume sliders
+
     def unload(self):
         self.playback_controller.unload()
         pygame.font.quit()
 
+
+import button
+import pygame
+
+
+class PlayButton(button.Button):
+    def __init__(self, rect, playback_controller):
+        super().__init__(rect)
+        self.playback_controller = playback_controller
+
+    def render_image(self):
+        surface = pygame.surface.Surface((75, 100), pygame.SRCALPHA).convert_alpha()
+        pygame.draw.polygon(surface, (14, 66, 95), ((0, 0), (0, 100), (75, 50)))
+        return surface
+
+    def on_click(self):
+        self.playback_controller.toggle()
+
+
+class PlayerButton(button.Button):
+    pass
