@@ -6,12 +6,14 @@ from gameviews.gameview import GameView
 
 
 class WelcomeClient(GameView):
-    def __init__(self, game_data):
+    def __init__(self, game_data, clock):
         super().__init__()
         self.game_data = game_data
         self.courier_prime_60 = pygame.font.Font('assets/CourierPrime-Bold.ttf', 60)
         self.space_mono_60 = pygame.font.Font('assets/SpaceMono-Regular.ttf', 60)
         self.next_button = NextButton(pygame.Rect(900, 600, 350, 100))
+        self.clock = clock
+        self.username_text = TextFieldCharLimit(self.next_button.rect, 8, clock)
 
     def render(self, screen):
         screen.fill(Colors.WHITE)
@@ -62,4 +64,22 @@ class NextButton(Button):
         surface.blit(self.space_mono_60.render("Next", True, Colors.WHITE), (15, 0))
 
         return surface
+
+
+class TextFieldCharLimit:
+    def __init__(self, rect, char_limit, clock):
+        self.text = ""
+        self.char_limit = char_limit
+        self.focused = False
+        self.rect = rect
+        self.clock = clock
+
+    def update(self):
+        if pygame.mouse.get_pressed()[0]:
+            if self.rect.collidepoint(pygame.mouse.get_pos()):
+                self.focused = True
+            else:
+                self.focused = False
+        if self.focused:
+            pass # pygame.key.
 

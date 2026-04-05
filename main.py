@@ -1,8 +1,7 @@
 import sys
 
 from gamedata import GameData
-from gameviews.clientorhostselection import ClientOrHostSelection
-from gameviews.gameover import GameOver
+from gameviews.waitingforhost import WaitingForHost
 from gameviews.welcome import WelcomeClient
 from networking import Client, Host
 from debug.networking import TEST_HOST, TEST_PORT
@@ -42,7 +41,7 @@ def main():
     game_data = GameData()
     game_data.players = [Player("Jeremy"), Player("Gus"), Player("Cameron"), Player("BarackO")]
     # view = Results(game_data, game_data.players[0], {game_data.players[0]: game_data.players[1], game_data.players[1]: game_data.players[1], game_data.players[2]: game_data.players[1], game_data.players[3]: game_data.players[1]})
-    view = WelcomeClient(game_data)
+    view = WaitingForHost(game_data)
 
     while running:
         for event in pygame.event.get():
