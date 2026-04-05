@@ -1,5 +1,6 @@
 import socket
 import pygame
+import requests
 
 
 class ServerNetworking:
