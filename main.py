@@ -7,7 +7,7 @@ import gameviews
 import io
 from threading import Thread
 
-import MusicManager
+import musicmanager
 import os
 from dotenv import load_dotenv, find_dotenv
 import pygame
