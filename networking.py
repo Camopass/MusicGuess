@@ -3,7 +3,6 @@ import selectors
 import types
 from enum import IntEnum
 from gamestates import GameStateIDs
-from debug.networking import TEST_MESSAGE
 
 class DataTypes(IntEnum):
     GAME_STATE = 0
