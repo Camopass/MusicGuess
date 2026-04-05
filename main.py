@@ -65,7 +65,7 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        game_manager.update(pygame.time.get_ticks)
+        game_manager.update(pygame.time.get_ticks())
 
         pygame.display.flip()
         game_data.deltaTime = game_data.clock.tick(60) / 1000

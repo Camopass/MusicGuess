@@ -50,7 +50,9 @@ class GameManager:
     def welcome_host(self, *args):
         self.playernames = self.networker.accept_connections_until_true(self.display_manager.gameview.button_pressed,
                                                                         self.display_manager.draw)
-
+        
+        if self.playernames is not None:
+            self.gamestate_update = self.pre_game
 
     def client_get_info(self, *args):
         self.display_manager.draw()
@@ -73,6 +75,7 @@ class GameManager:
             self.networker.manage_player_connections()
             self.networker.broadcast_to_all(START_MESSAGE)
             self.gamestate_update = self.round
+            self.display_manager.switch_gameviews(interrogation.Interrogation(self.gamedata))
         else:
             round_start_event = threading.Event()
 
@@ -82,14 +85,15 @@ class GameManager:
             if not waiting.is_alive():
                 waiting.start()
 
-            while not round_start_event.is_set():
-                self.display_manager.draw()
+            self.display_manager.draw()
             self.gamestate_update = self.round
+            self.display_manager.switch_gameviews(interrogation.Interrogation(self.gamedata))
             
     def round(self, ticks: int):
 
         if self.networker.is_host:
             if not self.round_started:
+                self.display_manager.draw()
                 self.networker.all_votes = {}
                 self.votes_summary = {}
                 for name in self.playernames:
@@ -98,9 +102,11 @@ class GameManager:
                 self.networker.broadcast_song(TEST_SONG)
                 self.networker.is_accepting_votes = True
                 self.round_started = True
+
+            self.display_manager.draw()
             self.networker.manage_player_connections()
 
-            if (ticks - self.round_start_ticks >= 5000 
+            if (ticks - self.round_start_ticks >= 30000 
                 or len(self.networker.all_votes.keys()) == len(self.playernames)):
                 self.gamestate_update = self.post_round
                 self.networker.broadcast_to_all(END_ROUND_MESSAGE)
@@ -110,8 +116,7 @@ class GameManager:
                 print(self.votes_summary)
         else:
             current_song = self.networker.recieve_song()
-            print(f"Your song is {current_song}\nvote for\n{current_song.correct_player} or {' or '.join(current_song.incorrect_players)}")
-            self.networker.start_round(self.name)
+            self.networker.start_round(self.name, self.display_manager.draw)
             self.gamestate_update = self.post_round
 
     def post_round(self, *args):

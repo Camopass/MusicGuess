@@ -31,15 +31,36 @@ def get_top_songs(name, api_key):
         "user": name,
         "api_key": api_key,
         "format": "json",
-        "limit": 100,
+        "limit": 5,
         "period": "overall",
     }
 
     resp = requests.get(url, params=params).json()
+
     top_songs = resp['toptracks']['track']
-    top_songs_formatted = [Song(song["name"], song["artist"]["name"], song["playcount"])
+    top_songs_formatted = [Song(song["name"], 
+                                song["artist"]["name"], 
+                                song["playcount"],
+                                name,
+                                [],
+                                get_image_url(song))
                            for song in top_songs]
     return top_songs_formatted
+
+def get_image_url(song):
+    mb_url = "https://musicbrainz.org/ws/2/release"
+    search = f"artist:{song['artist']['name']} AND release:{song['name']}"
+    mb_params = {
+        "query": search,
+        "format": "json",
+    }
+    mb_resp = requests.get(mb_url, params=mb_params).content
+    try:
+        root = ElementTree.fromstring(mb_resp)
+        mbid = root[0][0].attrib.get("id")
+    except:
+        return "https://webstockreview.net/images/square-clipart-grey.png"
+    return f"https://coverartarchive.org/release/{mbid}/"
 
 def get_image(song):
     mb_url = "https://musicbrainz.org/ws/2/release"
@@ -48,9 +69,12 @@ def get_image(song):
         "format": "json",
     }
     mb_resp = requests.get(mb_url, params=mb_params).content
-    root = ElementTree.fromstring(mb_resp)
-    mbid = root[0][0].attrib.get("id")
-    url = f"https://coverartarchive.org/release/{mbid}/"
+    try:
+        root = ElementTree.fromstring(mb_resp)
+        mbid = root[0][0].attrib.get("id")
+        url = f"https://coverartarchive.org/release/{mbid}/"
+    except:
+        url = "https://webstockreview.net/images/square-clipart-grey.png"
     headers = {
         "User-Agent": "MusicGuess/0.01 (camopass@gmail.com)"
     }

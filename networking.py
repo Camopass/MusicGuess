@@ -173,9 +173,10 @@ class Client(User):
                            and data["state"] == GameStateIDs.IN_ROUND)
             event.set()
     
-    def await_round_end(self, event: threading.Event):
+    def await_round_end(self, event: threading.Event, draw):
         round_end = False
         while not round_end:
+            draw()
             data = self.recieve()
             round_end = (data["type"] == "gamestate"
                            and data["state"] == GameStateIDs.NOT_IN_ROUND)
@@ -188,10 +189,10 @@ class Client(User):
         self.socket.sendall(self.format_message(message))
 
 
-    def start_round(self, name:str):
+    def start_round(self, name:str, draw):
         round_over_event = threading.Event()
         
-        threading.Thread(target=lambda: self.await_round_end(round_over_event), daemon=True).start()
+        threading.Thread(target=lambda: self.await_round_end(round_over_event, draw), daemon=True).start()
 
 
         while not round_over_event.is_set():
