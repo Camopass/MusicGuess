@@ -2,14 +2,13 @@ import sys
 from networking import Client, Host
 from debug.networking import TEST_HOST, TEST_PORT
 import io
-
-import MusicManager
+import musicmanager
 import os
 from dotenv import load_dotenv, find_dotenv
 import pygame
 
-from scripts.PlayButton import PlayButton
-from scripts.PlaybackController import PlaybackController
+from scripts.playbutton import PlayButton
+from scripts.playbackcontroller import PlaybackController
 
 def client():
     p = Client()
@@ -29,9 +28,9 @@ def main():
     load_dotenv(find_dotenv())
     api_key = os.getenv("API_KEY")
 
-    song = MusicManager.get_top_songs("s3nse1_snorlax", api_key)[0]
-    song_audio = MusicManager.download_song(song)
-    album_cover = MusicManager.get_image(song)
+    song = musicmanager.get_top_songs("s3nse1_snorlax", api_key)[0]
+    song_audio = musicmanager.download_song(song)
+    album_cover = musicmanager.get_image(song)
     song.cover = io.BytesIO(album_cover)
 
     pygame.init()

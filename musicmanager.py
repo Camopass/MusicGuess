@@ -2,7 +2,7 @@ from logging import root
 from xml.etree import ElementTree
 
 import requests
-import Song
+import song
 
 
 def download_song(song):
@@ -38,7 +38,7 @@ def get_top_songs(name, api_key):
 
     resp = requests.get(url, params=params).json()
     top_songs = resp['toptracks']['track']
-    top_songs_formatted = [Song.Song(song["name"], song["artist"]["name"], song["playcount"])
+    top_songs_formatted = [song.Song(song["name"], song["artist"]["name"], song["playcount"])
                            for song in top_songs]
     return top_songs_formatted
 
