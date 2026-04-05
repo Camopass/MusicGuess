@@ -1,7 +1,9 @@
 import sys
 
 from gamedata import GameData
-from gameviews.interrogation import Interrogation, PlayButton
+from gameviews.clientorhostselection import ClientOrHostSelection
+from gameviews.gameover import GameOver
+from gameviews.welcome import WelcomeClient
 from networking import Client, Host
 from debug.networking import TEST_HOST, TEST_PORT
 from dotenv import load_dotenv, find_dotenv
@@ -35,9 +37,12 @@ def main():
     clock = pygame.time.Clock()
     running = True
 
+    pygame.display.set_caption("GENREALIKE")
+
     game_data = GameData()
-    game_data.players = [Player("Jeremy"), Player("Gus"), Player("Cameron"), Player("Barack Obama")]
-    view = Interrogation(game_data)
+    game_data.players = [Player("Jeremy"), Player("Gus"), Player("Cameron"), Player("BarackO")]
+    # view = Results(game_data, game_data.players[0], {game_data.players[0]: game_data.players[1], game_data.players[1]: game_data.players[1], game_data.players[2]: game_data.players[1], game_data.players[3]: game_data.players[1]})
+    view = WelcomeClient(game_data)
 
     while running:
         for event in pygame.event.get():
@@ -52,6 +57,7 @@ def main():
 
     view.unload()
 
+    pygame.font.quit()
     pygame.quit()
 
 
