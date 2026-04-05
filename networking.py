@@ -22,13 +22,19 @@ class User:
         return isinstance(self, Host)
     
     def recieve(self):
-        length = int.from_bytes(self.recieve_bytes(4), "little")
-        return self.__parse_to_json(self.recieve_bytes(length))
+        length = int.from_bytes(User.recieve_bytes(self.socket, 4), "little")
+        return self.__parse_to_json(User.recieve_bytes(self.socket, length))
     
-    def recieve_bytes(self, n_bytes: int):
+    @staticmethod
+    def recieve_from(socket):
+        length = int.from_bytes(User.recieve_bytes(socket, 4), "little")
+        return User.__parse_to_json(User.recieve_bytes(socket, length))
+    
+    @staticmethod
+    def recieve_bytes(socket, n_bytes: int):
         data = b""
         while len(data) < n_bytes:
-            chunk = self.socket.recv(n_bytes - len(data))
+            chunk = socket.recv(n_bytes - len(data))
             if not chunk:
                 raise ConnectionError("Disconnected")
             data += chunk
@@ -53,6 +59,9 @@ class Host(User):
         self.socket.bind((HOST, PORT))
         self.selector = selectors.DefaultSelector()
         self.is_accepting_connections = True
+        self.is_accepting_votes = False
+        self.player_names = set()
+        self.all_votes = {}
 
     def listen(self):
         self.socket.listen()
@@ -72,7 +81,6 @@ class Host(User):
     def accept_connections_until_input(self):
         stop_event = threading.Event()
         self.listen()
-        connections = set()
 
         def wait_for_stop():
             while True:
@@ -83,11 +91,11 @@ class Host(User):
 
         while not stop_event.is_set():
             try:
-                connections.add(self.manage_player_connections())
+                self.manage_player_connections()
             except socket.timeout:
                 pass
         
-        return connections
+        return self.player_names
 
     def manage_player_connections(self):
         events = self.selector.select(timeout=1)
@@ -119,8 +127,12 @@ class Host(User):
         client_socket = key.fileobj
         data = key.data
         if mask & selectors.EVENT_READ:
-            recieved_data = client_socket.recv(1024) # pyright: ignore[reportAttributeAccessIssue]
-            if recieved_data:
+            recieved_data = User.recieve_from(client_socket) # pyright: ignore[reportAttributeAccessIssue]
+            if recieved_data and self.is_accepting_connections and recieved_data['type'] == 'playername':
+                self.player_names.add(recieved_data['name'])
+            elif recieved_data and self.is_accepting_votes and recieved_data['type'] == 'vote':
+                self.all_votes[recieved_data['playername']] = recieved_data['votename']
+            elif recieved_data:
                 pass
             else:
                 self.selector.unregister(client_socket)
@@ -143,13 +155,16 @@ class Client(User):
         raw_input = input("IP:Port -> ").split(":")
         ip = raw_input[0]
         port = int(raw_input[1])
-        return (ip, port)
+        name = input("last.fm username ")
+        return (ip, port, name)
 
-    def join(self, HOST, PORT):
+    def join(self, HOST, PORT, name):
         self.socket.connect((HOST, PORT))
-    
-    def send_and_recieve_test(self):
-        self.socket.sendall(bytes(input(), encoding='utf-8'))
+        message = json.dumps({"type": "playername",
+                   "name": name}).encode("utf-8")
+        
+        self.socket.sendall(self.format_message(message))
+
     
     def recieve_song(self):
         data = self.recieve()
@@ -162,3 +177,28 @@ class Client(User):
             data = self.recieve()
             round_start = (data["type"] == "gamestate"
                            and data["state"] == GameStateIDs.IN_ROUND)
+    
+    def await_round_end(self, event: threading.Event):
+        round_end = False
+        while not round_end:
+            data = self.recieve()
+            round_end = (data["type"] == "gamestate"
+                           and data["state"] == GameStateIDs.NOT_IN_ROUND)
+        event.set()
+    
+    def vote(self, vote: str, name: str):
+        message = json.dumps({'type': 'vote',
+                              'playername': name,
+                              'votename': vote}).encode('utf-8')
+        self.socket.sendall(self.format_message(message))
+
+
+    def start_round(self, name:str):
+        round_over_event = threading.Event()
+        
+        threading.Thread(target=lambda: self.await_round_end(round_over_event), daemon=True).start()
+
+
+        while not round_over_event.is_set():
+            self.vote(input(), name)
+

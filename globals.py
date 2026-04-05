@@ -9,3 +9,5 @@ class GameStateIDs(IntEnum):
 
 START_MESSAGE = dumps({"type": "gamestate",
                  "state": GameStateIDs.IN_ROUND}).encode("utf-8")
+END_ROUND_MESSAGE = dumps({"type": "gamestate",
+                 "state": GameStateIDs.NOT_IN_ROUND}).encode("utf-8")

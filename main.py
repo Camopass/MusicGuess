@@ -29,7 +29,7 @@ def main():
     gm = GameManager(screen)
 
     while running:
-        gm.update()
+        gm.update(pygame.time.get_ticks())
 
 
     pygame.quit()
